@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import { Server } from 'socket.io';
 import authRoutes from "./routes/auth"
 import conversationRoutes from "./routes/conversation"
+import connectMongo from './config/connectMongo';
 
 // import authRoutes from './routes/auth';
 import { handleSocketConnection } from "./socket/socketHandlers";
@@ -25,7 +26,13 @@ const io = new Server(server, {
 // Initialize socket handlers
 handleSocketConnection(io);
 
-mongoose.connect(process.env.MONGO_URI || '').then(() => {
+connectMongo().then(() => {
   const port = process.env.PORT || 4000;
   server.listen(port, () => console.log('Server listening on', port));
 }).catch((err) => console.error('Mongo connect failed +', err));
+
+
+// mongoose.connect(process.env.MONGO_URI || '').then(() => {
+//   const port = process.env.PORT || 4000;
+//   server.listen(port, () => console.log('Server listening on', port));
+// }).catch((err) => console.error('Mongo connect failed +', err));

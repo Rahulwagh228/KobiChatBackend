@@ -3,7 +3,6 @@ import { authMiddleware } from '../middlewares/auth';
 const router = express.Router();
 import Message from '../models/Message';
 import conversation from '../models/conversation';
-import { stringify } from 'querystring';
 
 
 router.post('/create', authMiddleware, async(req: express.Request, res: express.Response) =>{

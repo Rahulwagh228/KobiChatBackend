@@ -28,13 +28,13 @@ router.post('/register', async(req: express.Request, res: express.Response) =>{
     })
 
 
-// Login
+
 // Login
 router.post('/login', async (req: express.Request, res: express.Response) => {
   try {
     const { emailOrUsername, password } = req.body;
     const user = await User.findOne({ $or: [{ email: emailOrUsername }, { username: emailOrUsername }] });
-    if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
+    if (!user) return res.status(400).json({ msg: 'Invalid credentialsss' });
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ msg: 'Invalid credentials' });
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
