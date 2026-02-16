@@ -18,14 +18,15 @@ export const handleSocketConnection = (io: Server): void => {
   io.on('connection', (socket: AuthenticatedSocket) => {
     console.log('Socket connected:', socket.id);
 
-    // Setup with JWT
-    socket.on('setup', async ({ token }: { token: string }) => {
+    // Setup authentication with JWT
+    socket.on('auth', async ({ token }: { token: string }) => {
       try {
         const decoded = jwt.verify(
           token,
           process.env.JWT_SECRET as string
         ) as JwtPayload;
 
+        console.log("User authenticated:", decoded.id);
         const userId = decoded.id;
         socket.userId = userId;
 
@@ -38,48 +39,77 @@ export const handleSocketConnection = (io: Server): void => {
 
         io.emit('online-users', Array.from(onlineUsers.keys()));
       } catch (e: any) {
-        console.warn('Socket setup failed:', e.message);
+        console.warn('Socket authentication failed:', e.message);
       }
     });
 
-    // Join conversation room
-    socket.on('join-conversation', (conversationId: string) => {
-      socket.join(conversationId);
-    });
-
-    // Private message sending
+    // Send message
     socket.on(
-      'private-message',
-      async (conversationId: string, content: string, to?: string) => {
-        if (!socket.userId) return;
+      'message:send',
+      async (
+        { text, recipientId, conversationId, timestamp }: {
+          text: string;
+          recipientId: string;
+          conversationId: string;
+          timestamp: string;
+        },
+        callback?: (ack: any) => void
+      ) => {
+        if (!socket.userId) {
+          callback?.({ success: false, msg: 'Not authenticated' });
+          return;
+        }
 
         try {
+          // Save message to database
           const msg = await new Message({
             conversationId,
             sender: socket.userId,
-            content,
+            content: text,
           }).save();
 
+          // Update conversation's lastMessage
           await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: msg._id,
           });
 
+          const messagePayload = {
+            _id: msg._id,
+            text,
+            sender: socket.userId,
+            conversationId,
+            timestamp,
+          };
+
+          // Deliver to conversation room (all participants)
           io.to(conversationId).emit('new-message', {
-            message: msg,
+            message: messagePayload,
             conversationId,
           });
 
-          if (to) {
-            io.to(to).emit('new-message-notif', {
-              message: msg,
-              from: socket.userId,
-            });
-          }
-        } catch (err) {
+          // Send notification to recipient
+          io.to(recipientId).emit('new-message-notif', {
+            message: messagePayload,
+            from: socket.userId,
+            conversationId,
+          });
+
+          // Send acknowledgment back to sender
+          callback?.({ success: true, messageId: msg._id });
+
+          console.log(`✅ Message sent from ${socket.userId} to ${recipientId} in conversation ${conversationId}`);
+        } catch (err: any) {
           console.error('Error sending message:', err);
+          callback?.({ success: false, msg: 'Failed to send message', error: err.message });
         }
       }
     );
+
+    // Join conversation room
+    socket.on('join-conversation', (conversationId: string) => {
+      socket.join(conversationId);
+      console.log(`User ${socket.userId} joined conversation ${conversationId}`);
+    });
 
     // Typing indicator
     socket.on(
