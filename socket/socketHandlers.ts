@@ -81,18 +81,21 @@ export const handleSocketConnection = (io: Server): void => {
             timestamp,
           };
 
+          // console.log("message sockettt sockett", messagePayload);
+
+          console.log(conversationId, "recipantId")
           // Deliver to conversation room (all participants)
-          io.to(conversationId).emit('new-message', {
+          io.to(recipientId).emit('new-message', {
             message: messagePayload,
             conversationId,
           });
 
           // Send notification to recipient
-          io.to(recipientId).emit('new-message-notif', {
-            message: messagePayload,
-            from: socket.userId,
-            conversationId,
-          });
+            // io.to(recipientId).emit('new-message-notif', {
+            //   message: messagePayload,
+            //   from: socket.userId,
+            //   conversationId,
+            // });
 
           // Send acknowledgment back to sender
           callback?.({ success: true, messageId: msg._id });
