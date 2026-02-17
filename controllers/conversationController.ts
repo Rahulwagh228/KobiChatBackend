@@ -115,7 +115,7 @@ export const getConversationMessages = async (
       conversationId,
     })
       .populate("sender", "username avatarImage")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 });
 
     // Optimize response: exclude conversationId and flatten sender to just username
     const optimizedMessages = messages.map((msg: any) => ({
