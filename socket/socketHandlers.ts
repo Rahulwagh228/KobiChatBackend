@@ -26,7 +26,7 @@ export const handleSocketConnection = (io: Server): void => {
           process.env.JWT_SECRET as string
         ) as JwtPayload;
 
-        console.log("User authenticated:", decoded.id);
+        // console.log("User authenticated:", decoded.id);
         const userId = decoded.id;
         socket.userId = userId;
 
