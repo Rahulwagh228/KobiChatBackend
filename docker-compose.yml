@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    container_name: node_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - app_network
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  redis:
+    image: redis:7
+    container_name: redis_cache
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  app_network:
+    driver: bridge
