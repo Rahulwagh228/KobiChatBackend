@@ -13,14 +13,25 @@ import connectMongo from './config/connectMongo';
 import { handleSocketConnection } from "./socket/socketHandlers";
 
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+  'https://kobi-chat.vercel.app',
+  'http://localhost:3000'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/conversations', conversationRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' }, // restrict in prod
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
 });
 
 // Initialize socket handlers
