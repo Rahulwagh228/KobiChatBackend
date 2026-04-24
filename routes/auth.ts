@@ -5,7 +5,11 @@ import User from '../models/User';
 
 const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || "GOBI"
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+}
 
 // Register
 router.post('/register', async(req: express.Request, res: express.Response) =>{
@@ -14,7 +18,7 @@ router.post('/register', async(req: express.Request, res: express.Response) =>{
         if(!username || !email || !password) return res.status(400).json({msg: "All fields are required"});
 
         const existingUser = await User.findOne({$or: [{email}, {username}]});
-        if(existingUser) return res.status(400).json({msg:"user already exist"});
+        if(existingUser) return res.status(400).json({msg:"User already exists"});
 
         const hashed = await bcrypt.hash(password, 10);
         const user = await new User({username, email, password:hashed}).save();
@@ -34,7 +38,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
   try {
     const { emailOrUsername, password } = req.body;
     const user = await User.findOne({ $or: [{ email: emailOrUsername }, { username: emailOrUsername }] });
-    if (!user) return res.status(400).json({ msg: 'Invalid credentialsss' });
+    if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(400).json({ msg: 'Invalid credentials' });
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });

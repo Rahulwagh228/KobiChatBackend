@@ -1,8 +1,4 @@
-
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-dotenv.config();
-
 
 let isconnected = false;
 
@@ -34,10 +30,3 @@ export const connectMongo = async () => {
 // });
 
 export default connectMongo;
-
-
-
-// mongoose.connect(process.env.MONGO_URI || '').then(() => {
-//   const port = process.env.PORT || 4000;
-//   server.listen(port, () => console.log('Server listening on', port));
-// }).catch((err) => console.error('Mongo connect failed +', err));
